@@ -123,7 +123,7 @@
 
     <build>
 <!--        <finalName>microfund-b</finalName>-->
-        <finalName>testmicrofund</finalName>
+        <finalName>microfund-be-a</finalName>
 
         <plugins>
             <plugin>
