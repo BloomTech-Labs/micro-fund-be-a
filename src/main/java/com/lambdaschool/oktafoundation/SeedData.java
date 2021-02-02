@@ -74,7 +74,7 @@ public class SeedData implements CommandLineRunner
 
         // The following is an example user!
         /*
-        // admin, data, user
+       admin, data, user
         User u1 = new User("admin",
             "password",
             "admin@lambdaschool.local");
