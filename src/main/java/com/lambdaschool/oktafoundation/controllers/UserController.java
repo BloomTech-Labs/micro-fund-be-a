@@ -36,7 +36,7 @@ public class UserController
      * @see UserService#findAll() UserService.findAll()
      */
     // KM changes - changed value from users to all - may need to adjust authorization
-//    @PreAuthorize("hasAnyRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     @GetMapping(value = "/all", produces = "application/json")
     public ResponseEntity<?> listAllUsers()
     {

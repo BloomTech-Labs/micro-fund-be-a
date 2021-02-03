@@ -7,6 +7,7 @@ import com.lambdaschool.oktafoundation.services.RoleService;
 import com.lambdaschool.oktafoundation.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -37,30 +38,42 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter
     private RoleService roleService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse,
-        FilterChain filterChain) throws ServletException, IOException
+    protected void doFilterInternal(
+            HttpServletRequest httpServletRequest,
+            HttpServletResponse httpServletResponse,
+            FilterChain filterChain) throws ServletException, IOException
     {
         // find the username of the authenticated user
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Authentication authentication = SecurityContextHolder.getContext()
+                .getAuthentication();
 
         if (!(authentication instanceof AnonymousAuthenticationToken))
         {
-            System.out.println("Inside JWT AUTH Filter "+authentication.getName());
-            if (userrepos.findByUsername(authentication.getName()) == null)
+            User workingUser = userrepos.findByUsername(authentication.getName());
+
+            if (workingUser == null)
             {
-                User newUser = new User(authentication.getName());
+                workingUser = new User(authentication.getName());
 
                 // adds a default USER role to this new user
                 Set<UserRoles> newRoles = new HashSet<>();
-                newRoles.add(new UserRoles(newUser,
-                    roleService.findByName("user")));
-                newUser.setRoles(newRoles);
+                newRoles.add(new UserRoles(workingUser,
+                        roleService.findByName("user")));
+                workingUser.setRoles(newRoles);
 
-                userService.save(newUser);
+                workingUser = userService.save(workingUser);
+
             } else
             {
-                // we already have this user so nothing to update
+                // we already have this user so do nothing
             }
+            // Forcing authentication to recognize the BE authorities not Oktas.
+            Authentication newAuth = new UsernamePasswordAuthenticationToken(authentication.getName(),
+                    authentication.getCredentials(),
+                    workingUser.getAuthority());
+
+            SecurityContextHolder.getContext()
+                    .setAuthentication(newAuth);
 
             // continue the filter chain.
         } else
@@ -68,6 +81,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter
             // we do not have a user so nothing to check!
         }
         filterChain.doFilter(httpServletRequest,
-            httpServletResponse);
+                httpServletResponse);
     }
 }
